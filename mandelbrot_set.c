@@ -38,7 +38,7 @@ typedef struct Point_s
 {
   Base_t x;
   Base_t y;
-  uint8_t color;
+  uint32_t color;
 }Point_t;
 
 const size_t MAX_ITERATION = 1000;
@@ -48,8 +48,8 @@ const Base_t RADIUS = (1 << Q8_7_SHIFT) << 1;
 const Base_t RADIUS = 2;
 #endif
 
-#define SCREEN_XSIZE  256
-#define SCREEN_YSIZE  256
+#define SCREEN_XSIZE  512
+#define SCREEN_YSIZE  128
 
 typedef Point_t* Screen_t;
 
@@ -76,22 +76,32 @@ static inline  void complex_mul(Complex_t *c, Complex_t *a, Complex_t *b)
 static inline void screen_to_complex(Complex_t *c, Point_t *p)
 {
 #if FIXED_POINT == 1
-  c->re = ((p->x - (SCREEN_XSIZE >> 1)) * (1 << Q8_7_SHIFT)) / (SCREEN_XSIZE >> 1);
-  c->im = ((p->y - (SCREEN_YSIZE >> 1)) * (1 << Q8_7_SHIFT)) / (SCREEN_YSIZE >> 1);
+  c->re = ((p->x - (SCREEN_XSIZE >> 1)) * (1 << Q8_7_SHIFT)) / (SCREEN_XSIZE >> 2);
+  c->im = ((p->y - (SCREEN_YSIZE >> 1)) * (1 << Q8_7_SHIFT)) / (SCREEN_YSIZE >> 2);
 #else
-c->re = (p->x - (SCREEN_XSIZE / 2)) / (SCREEN_XSIZE/2);
-c->im = (p->y - (SCREEN_YSIZE / 2)) / (SCREEN_YSIZE/2);
+c->re = (p->x - (SCREEN_XSIZE / 2)) / (SCREEN_XSIZE/4);
+c->im = (p->y - (SCREEN_YSIZE / 2)) / (SCREEN_YSIZE/4);
 #endif
 }
 
 void screen_print(Point_t *screen)
 {
-  for (size_t x = 0; x < SCREEN_XSIZE ; x++) {
-    for (size_t y = 0; y < SCREEN_YSIZE; y++) {
-      fprintf(stdout, "%c", screen[SCREEN_XSIZE*y + x].color);
+  fprintf(stdout, " \
+  <!DOCTYPE html> \
+    <html> \
+      <head> \
+        <meta charset='UTF-8'> \
+        <title>Mandelbrot set</title> \
+      </head> \
+      <body bgcolor='#000000'> \
+        <pre>");
+  for (size_t y = 0; y < SCREEN_YSIZE ; y++) {
+    for (size_t x = 0; x < SCREEN_XSIZE; x++) {
+      fprintf(stdout, "<span style='color:#%06X'>¤</span>", screen[SCREEN_XSIZE*y + x].color & 0x00FFFFFF);
     }
-    fprintf(stdout, "\n");
+    fprintf(stdout, "<br />\n");
   }
+  fprintf(stdout, "</pre></body></html>\n");
 }
 
 void point_color_cal(Point_t *p)
@@ -121,9 +131,13 @@ void point_color_cal(Point_t *p)
     iteration++;
   }
   if(iteration == MAX_ITERATION){
-    p->color = ' ';
+    p->color = 0;
   }else{
-    p->color = (iteration%10) + '0';
+#if FIXED_POINT == 1
+    p->color = (iteration * rr) * 2;
+#else
+    p->color = (iteration * rr) * 128;
+#endif
   }
 }
 
