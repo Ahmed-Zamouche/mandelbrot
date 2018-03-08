@@ -48,8 +48,8 @@ const Base_t RADIUS = (1 << Q8_7_SHIFT) << 1;
 const Base_t RADIUS = 2;
 #endif
 
-#define SCREEN_XSIZE  512
-#define SCREEN_YSIZE  128
+#define SCREEN_XSIZE  256
+#define SCREEN_YSIZE  64
 
 typedef Point_t* Screen_t;
 
@@ -92,8 +92,15 @@ void screen_print(Point_t *screen)
       <head> \
         <meta charset='UTF-8'> \
         <title>Mandelbrot set</title> \
+        <style> \
+          div#mandelbrot_set { \
+            zoom: 25%%; \
+            -moz-transform: scale(0.25); \
+          } \
+          </style> \
       </head> \
       <body bgcolor='#000000'> \
+      <div id='mandelbrot_set'> \
         <pre>");
   for (size_t y = 0; y < SCREEN_YSIZE ; y++) {
     for (size_t x = 0; x < SCREEN_XSIZE; x++) {
